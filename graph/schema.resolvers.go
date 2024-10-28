@@ -6,28 +6,82 @@ package graph
 
 import (
 	"context"
-	"crypto/rand"
-	"fmt"
-	"math/big"
+	"errors"
+	"time"
+
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/hillfolk/go-graphql/graph/model"
 )
 
 // CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	randNumber, _ := rand.Int(rand.Reader, big.NewInt(100))
-	todo := &model.Todo{
+func (r *mutationResolver) CreateTodo(ctx context.Context, input model.TodoInput) (*model.Todo, error) {
+	id := r.id()
+	newTodo := &model.Todo{
 		Text:   input.Text,
-		ID:     fmt.Sprintf("T%d", randNumber),
+		ID:     id,
 		UserID: input.UserID,
+		User:   r.GetUserByID(input.UserID),
 	}
-	r.todos = append(r.todos, todo)
-	return todo, nil
+
+	if input.Done != nil {
+		newTodo.Done = *input.Done
+	}
+
+	r.TodoList = append(r.TodoList, newTodo)
+	return newTodo, nil
+}
+
+// UpdateTodo is the resolver for the updateTodo field.
+func (r *mutationResolver) UpdateTodo(ctx context.Context, id string, changes map[string]interface{}) (*model.Todo, error) {
+	var affectedTodo *model.Todo
+
+	for i := 0; i < len(r.TodoList); i++ {
+		if r.TodoList[i].ID == id {
+			affectedTodo = r.TodoList[i]
+			break
+		}
+	}
+
+	if affectedTodo == nil {
+		return nil, nil
+	}
+
+	err := mapstructure.Decode(changes, affectedTodo)
+	if err != nil {
+		panic(err)
+	}
+
+	return affectedTodo, nil
+}
+
+// Todo is the resolver for the todo field.
+func (r *queryResolver) Todo(ctx context.Context, id string) (*model.Todo, error) {
+	time.Sleep(220 * time.Millisecond)
+
+	if id == "100" {
+		panic("critical failure")
+	}
+
+	for _, todo := range r.TodoList {
+		if todo.ID == id {
+			return todo, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
+// LastTodo is the resolver for the lastTodo field.
+func (r *queryResolver) LastTodo(ctx context.Context) (*model.Todo, error) {
+	if len(r.TodoList) == 0 {
+		return nil, errors.New("not found")
+	}
+	return r.TodoList[len(r.TodoList)-1], nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	return r.todos, nil
+	return r.TodoList, nil
 }
 
 // User is the resolver for the user field.
