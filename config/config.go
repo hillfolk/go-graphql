@@ -25,10 +25,10 @@ func New() graph.Config {
 	c := graph.Config{
 		Resolvers: &graph.Resolver{
 			TodoList: []*model.Todo{
-				{ID: "1", Text: "A todo not to forget", Done: false, User: you},
-				{ID: "2", Text: "This is the most important", Done: false, User: you},
-				{ID: "3", Text: "Somebody else's todo", Done: true, User: you},
-				{ID: "4", Text: "Please do this or else", Done: false, User: you},
+				{ID: "1", Text: "A todo not to forget", Done: false, UserID: you.ID, User: you},
+				{ID: "2", Text: "This is the most important", Done: false, UserID: you.ID, User: you},
+				{ID: "3", Text: "Somebody else's todo", Done: true, UserID: you.ID, User: you},
+				{ID: "4", Text: "Please do this or else", Done: false, UserID: you.ID, User: you},
 			},
 			LastID: 4,
 			UserList: []*model.User{
