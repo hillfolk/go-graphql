@@ -25,10 +25,6 @@ type Todo {
   user: User!
 }
 
-type User {
-  id: ID!
-  name: String!
-}
 
 input TodoInput {
   text: String!
